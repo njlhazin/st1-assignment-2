@@ -1,37 +1,45 @@
 
-#smart care: Community Clinic appointment booking system (made by the student)
+#smart care: Community Clinic appointment booking system (code by human)
 
 appointments = []
 
 def is_slot_available(practitioner_name, appointment_time):
-    """Check if practioner is free at the given appointment time."""
+    """Check if a practitioner is available."""
     for appointment in appointments:
-        if appointment['practitioner_name'] == practitioner_name and appointment['appointment_time'] == appointment_time:
+        if (appointment["practitioner_name"] == practitioner_name and
+            appointment["appointment_time"] == appointment_time):
             return False
     return True
 
+
 def book_appointment(patient_name, practitioner_name, appointment_time):
-    if not patient_name:
-        print ("Error : Patient name cannot be empty.")
+
+    if not patient_name or patient_name.strip() == "":
+        print("Error: Patient name cannot be empty.")
         return
 
-    if not practitioner_name:
-        print ("Error : Practitioner name cannot be empty.")
+    if not practitioner_name or practitioner_name.strip() == "":
+        print("Error: Practitioner name cannot be empty.")
         return
 
-    if not appointment_time:
-        print ("Error : Appointment time cannot be empty.")
+    if not appointment_time or appointment_time.strip() == "":
+        print("Error: Appointment time cannot be empty.")
         return
 
     if is_slot_available(practitioner_name, appointment_time):
-        appointments.append({
-            'patient_name': patient_name,
-            'practitioner_name': practitioner_name,
-            'appointment_time': appointment_time
-        })
+
+        appointment = {
+            "patient_name": patient_name,
+            "practitioner_name": practitioner_name,
+            "appointment_time": appointment_time
+        }
+
+        appointments.append(appointment)
         print("Appointment booked successfully.")
+
     else:
         print("Sorry, the slot is not available.")
+
 
 def cancel_appointment(patient_name, practitioner_name, appointment_time):
     for appointment in appointments:
@@ -43,6 +51,7 @@ def cancel_appointment(patient_name, practitioner_name, appointment_time):
             return
     print(f"No matching appointment found to cancel for {patient_name} with {practitioner_name} at {appointment_time}.")
 
+
 def find_appointments_by_patient(patient_name):
     matches = [appointment for appointment in appointments if appointment['patient_name'] == patient_name]
     if matches:
@@ -52,14 +61,6 @@ def find_appointments_by_patient(patient_name):
     else:
         print(f"No appointments found for {patient_name}.")
 
-def find_patient_appointments(patient_name):
-    matches = [appointment for appointment in appointments if appointment['patient_name'] == patient_name]
-    if matches:
-        print(f"Appointments for {patient_name}:")
-        for appointment in matches:
-            print(f"Practitioner: {appointment['practitioner_name']}, Time: {appointment['appointment_time']}")
-    else:
-        print(f"No appointments found for {patient_name}.")
 
 def display_appointments():
     if appointments:
@@ -69,20 +70,36 @@ def display_appointments():
     else:
         print("No appointments scheduled.")
 
+
 print("Welcome to the Community Clinic Appointment Booking System")
 
+# Normal appointments
 book_appointment("John Doe", "Dr. Smith", "2024-06-15 10:00 am")
-book_appointment("Jane Doe", "Dr. Smith", "2024-06-15 10:00 am")
 book_appointment("Alice Johnson", "Dr. Brown", "2024-06-15 11:00 am")
+
+# Blank patient name - should be rejected
+print("\nTrying a blank patient name:")
+book_appointment("", "Dr. Smith", "2024-06-15 01:00 pm")
+
+# Duplicate practitioner/time - should be rejected
+print("\nTrying to double-book Dr. Smith at 10:00 am:")
+book_appointment("Jane Doe", "Dr. Smith", "2024-06-15 10:00 am")
+
+# Strange input: None values - should be rejected, not crash
+print("\nTrying None as patient name:")
+book_appointment(None, "Dr. Smith", "2024-06-15 02:00 pm")
+
+print("\nTrying None as appointment time:")
+book_appointment("Bob", "Dr. Smith", None)
 
 print("\nFinding appointments for John Doe:")
 find_appointments_by_patient("John Doe")
 
-print("\n full schedule of appointments:")
+print("\nFull schedule of appointments:")
 display_appointments()
 
 print("\nCanceling appointment for John Doe with Dr. Smith at 2024-06-15 10:00 am:")
 cancel_appointment("John Doe", "Dr. Smith", "2024-06-15 10:00 am")
 
-print("\n full schedule of appointments after cancellation:")
+print("\nFull schedule of appointments after cancellation:")
 display_appointments()
