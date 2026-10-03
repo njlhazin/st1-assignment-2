@@ -7,13 +7,29 @@ Domain classes for a simple appointment booking system:
     Appointment  - links ONE patient to ONE practitioner at a date/time
 """
 
-# Imports
+# Imports (used AI to add these as it suggested they were missing)
 from datetime import date, time, timedelta  # date/time types + date maths for the demo
 from enum import Enum                       # lets us define a fixed set of statuses
 from typing import Optional                 # type hint for "this value may be None"
 
 
-# APPOINTMENT STATUS
+# HELPER (AI-assisted fix after review: stops a crash when a non-string is passed)
+
+def _require_text(value, field_name: str) -> str:
+    """Return value if it is a non-empty string, otherwise raise an error.
+
+    Wrong type (e.g. 123 or None) -> TypeError, instead of the confusing
+    AttributeError that calling .strip() on a non-string would cause.
+    Empty or spaces-only text -> ValueError, as before.
+    """
+    if not isinstance(value, str):
+        raise TypeError(f"{field_name} must be text.")
+    if not value.strip():
+        raise ValueError(f"{field_name} cannot be empty.")
+    return value
+
+
+# APPOINTMENT STATUS (Ai suggested as i asked it to add the appointment class)
 
 class AppointmentStatus(Enum):
     SCHEDULED = "Scheduled"   # booked and still to happen
@@ -21,9 +37,7 @@ class AppointmentStatus(Enum):
     CANCELLED = "Cancelled"   # the booking was cancelled
 
 
-
-# PATIENT CLASS
-
+# PATIENT CLASS (did it myself but AI suggested adding the type hints and docstrings)
 
 class Patient:
     """Stores and validates patient information."""
@@ -32,17 +46,13 @@ class Patient:
                  date_of_birth: date, contact_details: str):
         """Create a patient. Rejects empty text fields and future birth dates."""
 
-        # .strip() removes spaces, so "   " counts as empty too.
-        if not patient_id.strip():
-            raise ValueError("Patient ID cannot be empty.")
-        if not name.strip():
-            raise ValueError("Patient name cannot be empty.")
+        # _require_text() rejects wrong types and empty/spaces-only text.
+        _require_text(patient_id, "Patient ID")
+        _require_text(name, "Patient name")
 
-        
         if date_of_birth > date.today():
             raise ValueError("Date of birth cannot be in the future.")
-        if not contact_details.strip():
-            raise ValueError("Contact details cannot be empty.")
+        _require_text(contact_details, "Contact details")
 
         # Only reached if every check above passed, so stored data is always valid.
         self.patient_id = patient_id
@@ -51,19 +61,16 @@ class Patient:
         self.contact_details = contact_details
 
     def register(self):
-        """UML operation register().
-        """
+        """UML operation register()."""
         return self
 
     def update_details(self,
                        name: Optional[str] = None,
                        date_of_birth: Optional[date] = None,
                        contact_details: Optional[str] = None):
-       
+
         if name is not None:
-            if not name.strip():
-                raise ValueError("Patient name cannot be empty.")
-            self.name = name
+            self.name = _require_text(name, "Patient name")
 
         if date_of_birth is not None:
             if date_of_birth > date.today():
@@ -71,9 +78,8 @@ class Patient:
             self.date_of_birth = date_of_birth
 
         if contact_details is not None:
-            if not contact_details.strip():
-                raise ValueError("Contact details cannot be empty.")
-            self.contact_details = contact_details
+            self.contact_details = _require_text(
+                contact_details, "Contact details")
 
     def get_details(self):
         return {
@@ -84,20 +90,16 @@ class Patient:
         }
 
 
-
-# PRACTITIONER CLASS
+# PRACTITIONER CLASS (did it myself but AI suggested adding the type hints and docstrings)
 
 class Practitioner:
 
     def __init__(self, practitioner_id: str, name: str,
                  specialty: str, availability: Optional[set] = None):
         """Create a practitioner. Availability is optional (starts empty)."""
-        if not practitioner_id.strip():
-            raise ValueError("Practitioner ID cannot be empty.")
-        if not name.strip():
-            raise ValueError("Practitioner name cannot be empty.")
-        if not specialty.strip():
-            raise ValueError("Specialty cannot be empty.")
+        _require_text(practitioner_id, "Practitioner ID")
+        _require_text(name, "Practitioner name")
+        _require_text(specialty, "Specialty")
 
         self.practitioner_id = practitioner_id
         self.name = name
@@ -115,14 +117,10 @@ class Practitioner:
     def update_details(self, name: Optional[str] = None,
                        specialty: Optional[str] = None):
         if name is not None:
-            if not name.strip():
-                raise ValueError("Practitioner name cannot be empty.")
-            self.name = name
+            self.name = _require_text(name, "Practitioner name")
 
         if specialty is not None:
-            if not specialty.strip():
-                raise ValueError("Specialty cannot be empty.")
-            self.specialty = specialty
+            self.specialty = _require_text(specialty, "Specialty")
 
     def check_availability(self, appointment_date: date,
                            appointment_time: time) -> bool:
@@ -136,7 +134,8 @@ class Practitioner:
             "availability": self.availability,
         }
 
-# APPOINTMENT CLASS
+
+# APPOINTMENT CLASS (AI did this one)
 
 class Appointment:
 
@@ -145,8 +144,7 @@ class Appointment:
                  practitioner: Practitioner,
                  status: AppointmentStatus = AppointmentStatus.SCHEDULED):
 
-        if not appointment_id.strip():
-            raise ValueError("Appointment ID cannot be empty.")
+        _require_text(appointment_id, "Appointment ID")
         if appointment_date < date.today():
             raise ValueError("Appointment cannot be in the past.")
         if not isinstance(patient, Patient):
@@ -159,8 +157,8 @@ class Appointment:
         self.appointment_id = appointment_id
         self.date = appointment_date
         self.time = appointment_time
-        self.patient = patient            
-        self.practitioner = practitioner  
+        self.patient = patient
+        self.practitioner = practitioner
         self._status = status
 
     @property
@@ -265,12 +263,12 @@ if __name__ == "__main__":
     print("Appointment created:")
     print(appointment1.view_details())
 
-    #cancel it and show the new status.
+    # cancel it and show the new status.
     appointment1.cancel()
     print("\nAfter cancellation:")
     print(appointment1.view_details())
 
-    #cancelling again must fail; we catch the error and print it.
+    # cancelling again must fail; we catch the error and print it.
     try:
         appointment1.cancel()
     except ValueError as error:
